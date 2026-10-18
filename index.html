@@ -3,68 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Contents Example</title>
+  <title>Inductive Power Transfer</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <button id="toggle" type="button" aria-controls="sidebar" aria-expanded="true" aria-label="Hide contents">&#8249;</button>
-
-  <!-- SIDEBAR: every link's href must match an id in the content below -->
+  <!-- The contents list and all sections are built by script.js from contents.json -->
   <nav id="sidebar" aria-label="Contents">
     <a class="home-link" href="#home">Contents</a>
-    <ul class="toc">
-      <li>
-        <a href="#section1">Section 1</a>
-        <ul>
-          <li><a href="#s1-sub1">S1 Subsection 1</a></li>
-          <li><a href="#s1-sub2">S1 Subsection 2</a></li>
-        </ul>
-      </li>
-      <li>
-        <a href="#section2">Section 2</a>
-        <ul>
-          <li><a href="#s2-sub1">S2 Subsection 1</a></li>
-          <li><a href="#s2-sub2">S2 Subsection 2</a></li>
-        </ul>
-      </li>
-    </ul>
   </nav>
 
-  <!-- CONTENT -->
   <main>
     <article id="home">
       <h1>Welcome</h1>
-      <p>Choose a section or subsection from the contents on the left. The contents hide so you can read; use the arrow to bring them back.</p>
-    </article>
-
-    <article id="section1" hidden>
-      <a class="crumb" href="#section1">&#8249; Section 1</a>
-      <h1>Section 1</h1>
-      <section id="s1-sub1">
-        <h2>S1 Subsection 1</h2>
-        <p>Content for Section 1, Subsection 1. Replace this text with your own.</p>
-      </section>
-      <section id="s1-sub2">
-        <h2>S1 Subsection 2</h2>
-        <p>Content for Section 1, Subsection 2. You can add paragraphs, lists, images or links here.</p>
-      </section>
-    </article>
-
-    <article id="section2" hidden>
-      <a class="crumb" href="#section2">&#8249; Section 2</a>
-      <h1>Section 2</h1>
-      <section id="s2-sub1">
-        <h2>S2 Subsection 1</h2>
-        <p>Content for Section 2, Subsection 1.</p>
-      </section>
-      <section id="s2-sub2">
-        <h2>S2 Subsection 2</h2>
-        <p>Content for Section 2, Subsection 2.</p>
-      </section>
+      <p>Choose a section or subsection from the contents on the left.</p>
     </article>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

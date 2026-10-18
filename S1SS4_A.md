@@ -1,0 +1,1 @@
+When the technology become commonly available in market, it is necessary to ensure standardisation so that users can know whether a product from a different manufacturer can be used with another product interoperably.
