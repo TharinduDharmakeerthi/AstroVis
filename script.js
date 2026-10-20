@@ -20,15 +20,44 @@ async function loadSection(id) {
   return s;
 }
 
+const expandable = new Map(); // id -> { li, btn } for entries that have subtopics
+
+function setOpen(id, open) {
+  const e = expandable.get(id);
+  if (!e) return;
+  e.li.classList.toggle('open', open);
+  e.btn.setAttribute('aria-expanded', String(open));
+}
+
 function renderList(nodes) {
   const ul = document.createElement('ul');
   for (const n of nodes) {
     const li = document.createElement('li');
+    const row = document.createElement('div');
+    row.className = 'row';
+
+    if (n.children.length) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'toggle';
+      btn.setAttribute('aria-label', 'Show or hide subtopics of ' + n.title);
+      btn.setAttribute('aria-expanded', 'false');
+      btn.addEventListener('click', () => setOpen(n.id, !li.classList.contains('open')));
+      row.append(btn);
+      expandable.set(n.id, { li, btn });
+    } else {
+      const spacer = document.createElement('span');
+      spacer.className = 'spacer';
+      row.append(spacer);
+    }
+
     const a = document.createElement('a');
     a.href = '#' + n.id;
     a.textContent = n.title;
     links.set(n.id, a);
-    li.append(a);
+    row.append(a);
+    li.append(row);
+
     if (n.children.length) li.append(renderList(n.children));
     ul.append(li);
   }
@@ -92,6 +121,10 @@ function show() {
 
   page.replaceChildren(...(trail.length ? [crumbs] : []), h1, renderBody(s.body));
   document.title = s.title + ' \u00B7 AstroVis Digital Garden';
+
+  // Open the current section and its parents; collapse everything else
+  const openIds = new Set([...trail.map(p => p.id), s.id]);
+  expandable.forEach((_, id) => setOpen(id, openIds.has(id)));
 
   links.forEach((a, id) => {
     if (id === s.id) {
