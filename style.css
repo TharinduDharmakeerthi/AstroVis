@@ -45,7 +45,7 @@ body {
 
 /* AstroVis logo: fixed at the top of the sidebar, flush with the top of the page */
 .logo { display: block; flex: none; line-height: 0; }
-.logo img { display: block; width: var(--sbw); max-width: 100%; height: auto; }
+.logo img { display: block; width: var(--sbw); max-width: 100%; max-height: 40vh; height: auto; object-fit: contain; }
 
 /* Only the topic list scrolls; the logo stays put */
 .side-scroll {
@@ -95,13 +95,19 @@ body {
 /* Reading area */
 main {
   margin-left: var(--sbw);
+  min-width: 0;
+  overflow-x: clip;
   padding: 0 0 96px;
 }
 
 /* Digital Garden banner: top edge lines up with the top of the AstroVis logo */
-.banner { border-bottom: 1px solid var(--line); line-height: 0; }
+.banner { border-bottom: 1px solid var(--line); line-height: 0; overflow: hidden; }
 /* To keep the banner on screen while scrolling, add:  position: sticky; top: 0; background: var(--bg); z-index: 5; */
-.banner img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+/* Scales to the width of the page area, never wider; very tall images are capped in height */
+.banner img { display: block; width: 100%; max-height: 220px; object-fit: contain; }
+/* If an image file cannot be found, hide it completely (no broken-image icon) */
+img[hidden] { display: none !important; }
+.banner:has(img[hidden]) { display: none; }
 
 article { max-width: calc(70ch + 64px); margin: 0 auto; padding: 40px 32px 0; }
 h1 { margin: 0 0 20px; font-size: 2.1rem; line-height: 1.25; }

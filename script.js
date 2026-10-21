@@ -11,6 +11,17 @@ function fitSidebar() {
 if (logo.complete) fitSidebar();
 else logo.addEventListener('load', fitSidebar);
 
+// If a logo file is missing, hide it instead of showing a broken-image icon
+function hideIfBroken(img) {
+  const hide = () => {
+    img.hidden = true;
+    console.warn('Image not found: ' + img.getAttribute('src'));
+  };
+  img.addEventListener('error', hide);
+  if (img.complete && !img.naturalWidth) hide();
+}
+document.querySelectorAll('.logo img, .banner img').forEach(hideIfBroken);
+
 const tree = document.getElementById('tree');
 const page = document.getElementById('page');
 const sections = new Map();   // id -> { id, title, body, children }
