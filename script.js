@@ -1,3 +1,16 @@
+// Sidebar width follows the AstroVis logo's width (kept between MIN and MAX pixels).
+// To use a fixed width instead, delete this block and set --sbw in style.css.
+const SIDEBAR_MIN = 220;
+const SIDEBAR_MAX = 380;
+const logo = document.getElementById('logo');
+function fitSidebar() {
+  if (!logo.naturalWidth) return;
+  const w = Math.min(Math.max(Math.round(logo.naturalWidth), SIDEBAR_MIN), SIDEBAR_MAX);
+  document.documentElement.style.setProperty('--sbw', w + 'px');
+}
+if (logo.complete) fitSidebar();
+else logo.addEventListener('load', fitSidebar);
+
 const tree = document.getElementById('tree');
 const page = document.getElementById('page');
 const sections = new Map();   // id -> { id, title, body, children }
