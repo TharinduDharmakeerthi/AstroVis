@@ -1,12 +1,20 @@
-// Sidebar width follows the AstroVis logo's width (kept between MIN and MAX pixels).
-// To use a fixed width instead, delete this block and set --sbw in style.css.
+// ---- Logo sizing -------------------------------------------------------
+// The AstroVis logo is shown at two-thirds of its size (its width is first kept between
+// LOGO_BASE_MIN and LOGO_BASE_MAX pixels). The sidebar is as wide as the logo, but never
+// narrower than SIDEBAR_MIN so the topic list stays readable.
+const LOGO_SCALE = 2 / 3;
+const LOGO_BASE_MIN = 220;
+const LOGO_BASE_MAX = 380;
 const SIDEBAR_MIN = 220;
-const SIDEBAR_MAX = 380;
 const logo = document.getElementById('logo');
+
 function fitSidebar() {
   if (!logo.naturalWidth) return;
-  const w = Math.min(Math.max(Math.round(logo.naturalWidth), SIDEBAR_MIN), SIDEBAR_MAX);
-  document.documentElement.style.setProperty('--sbw', w + 'px');
+  const base = Math.min(Math.max(logo.naturalWidth, LOGO_BASE_MIN), LOGO_BASE_MAX);
+  const logoW = Math.round(base * LOGO_SCALE);
+  const root = document.documentElement.style;
+  root.setProperty('--logo-w', logoW + 'px');
+  root.setProperty('--sbw', Math.max(logoW, SIDEBAR_MIN) + 'px');
 }
 if (logo.complete) fitSidebar();
 else logo.addEventListener('load', fitSidebar);
@@ -22,29 +30,63 @@ function hideIfBroken(img) {
 }
 document.querySelectorAll('.logo img, .banner img').forEach(hideIfBroken);
 
+// ---- Sections ----------------------------------------------------------
 const tree = document.getElementById('tree');
 const page = document.getElementById('page');
-const sections = new Map();   // id -> { id, title, body, children }
+const sections = new Map();   // id -> { id, title, children, parts }
 const links = new Map();      // id -> sidebar <a>
+const expandable = new Map(); // id -> { li, btn } for entries that have subtopics
 let firstId = null;
+let renderToken = 0;
 
-// Reads content/<id>.md. The first line "# Heading" is the title; the rest is the content.
-async function loadSection(id) {
-  const s = { id, title: id, body: '', children: [] };
+const TITLE_RE = /^\s*#\s+(.+?)\s*(?:\r?\n|$)/;
+
+async function fetchText(url) {
   try {
-    const res = await fetch('content/' + id + '.md');
-    if (!res.ok) throw new Error('not found');
-    let text = (await res.text()).replace(/^\uFEFF/, '');
-    const m = text.match(/^\s*#\s+(.+?)\s*(?:\r?\n|$)/);
-    if (m) { s.title = m[1]; text = text.slice(m[0].length); }
-    s.body = text.trim();
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    return (await res.text()).replace(/^\uFEFF/, '');
   } catch (e) {
-    s.body = '[Could not load content/' + id + '.md]';
+    return null;
   }
+}
+
+function loadImage(src) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+// Sidebar title = the "# Heading" line at the top of <id>_0.md
+async function loadTitle(id) {
+  const s = { id, title: id, children: [], parts: null };
+  const text = await fetchText('content/' + id + '_0.md');
+  const m = text && text.match(TITLE_RE);
+  if (m) s.title = m[1];
   return s;
 }
 
-const expandable = new Map(); // id -> { li, btn } for entries that have subtopics
+// Finds <id>_0.md, <id>_1.md ... and images/<id>_0.png, <id>_1.png ... until a number has neither
+async function loadParts(id) {
+  const parts = [];
+  for (let i = 0; i < 200; i++) {
+    const [text, img] = await Promise.all([
+      fetchText('content/' + id + '_' + i + '.md'),
+      loadImage('images/' + id + '_' + i + '.png')
+    ]);
+    if (text === null && !img) break;
+    parts.push({ text, img });
+  }
+  return parts;
+}
+
+function getParts(s) {
+  if (!s.parts) s.parts = loadParts(s.id);
+  return s.parts;
+}
 
 function setOpen(id, open) {
   const e = expandable.get(id);
@@ -92,7 +134,7 @@ async function build() {
   const res = await fetch('content/sections.json');
   if (!res.ok) throw new Error('content/sections.json not found');
   const ids = await res.json();
-  const loaded = await Promise.all(ids.map(loadSection));
+  const loaded = await Promise.all(ids.map(loadTitle));
   loaded.forEach(s => sections.set(s.id, s));
   firstId = ids[0];
 
@@ -120,10 +162,33 @@ function renderBody(text) {
   return div;
 }
 
-function show() {
+// Each part: its image (if any) first, then its text (if any)
+function renderParts(s, parts) {
+  const nodes = [];
+  parts.forEach((part, i) => {
+    if (part.img) {
+      const img = part.img.cloneNode();
+      img.alt = s.title + ' (figure ' + (i + 1) + ')';
+      nodes.push(img);
+    }
+    if (part.text !== null) {
+      const text = (i === 0 ? part.text.replace(TITLE_RE, '') : part.text).trim();
+      if (text) nodes.push(renderBody(text));
+    }
+  });
+  if (!nodes.length) {
+    const p = document.createElement('p');
+    p.textContent = 'No content yet. Add content/' + s.id + '_0.md for this section.';
+    nodes.push(p);
+  }
+  return nodes;
+}
+
+async function show() {
   const wanted = decodeURIComponent(location.hash.slice(1));
   const s = sections.get(wanted) || sections.get(firstId);
   if (!s) return;
+  const token = ++renderToken;
 
   // Breadcrumb of parent topics
   const crumbs = document.createElement('p');
@@ -143,7 +208,7 @@ function show() {
   const h1 = document.createElement('h1');
   h1.textContent = s.title;
 
-  page.replaceChildren(...(trail.length ? [crumbs] : []), h1, renderBody(s.body));
+  page.replaceChildren(...(trail.length ? [crumbs] : []), h1);
   document.title = s.title + ' \u00B7 AstroVis Digital Garden';
 
   // Open the current section and its parents; collapse everything else
@@ -159,6 +224,10 @@ function show() {
     }
   });
   window.scrollTo(0, 0);
+
+  const parts = await getParts(s);
+  if (token !== renderToken) return;   // the reader already moved to another section
+  page.append(...renderParts(s, parts));
 }
 
 build()

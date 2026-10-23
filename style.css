@@ -6,7 +6,8 @@
   --line: #cfdbd3;
   --accent: #2f6f4f;
   --hover: #e4eee7;
-  --sbw: 300px;
+  --sbw: 220px;
+  --logo-w: 200px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -45,7 +46,8 @@ body {
 
 /* AstroVis logo: fixed at the top of the sidebar, flush with the top of the page */
 .logo { display: block; flex: none; line-height: 0; }
-.logo img { display: block; width: var(--sbw); max-width: 100%; max-height: 40vh; height: auto; object-fit: contain; }
+/* Shown at two-thirds size; script.js sets --logo-w and --sbw from the logo file */
+.logo img { display: block; width: var(--logo-w); max-width: 100%; max-height: 27vh; height: auto; object-fit: contain; margin: 0 auto; }
 
 /* Only the topic list scrolls; the logo stays put */
 .side-scroll {
@@ -104,7 +106,7 @@ main {
 .banner { border-bottom: 1px solid var(--line); line-height: 0; overflow: hidden; }
 /* To keep the banner on screen while scrolling, add:  position: sticky; top: 0; background: var(--bg); z-index: 5; */
 /* Scales to the width of the page area, never wider; very tall images are capped in height */
-.banner img { display: block; width: 100%; max-height: 220px; object-fit: contain; }
+.banner img { display: block; width: 66.667%; max-height: 147px; height: auto; object-fit: contain; margin: 0 auto; }
 /* If an image file cannot be found, hide it completely (no broken-image icon) */
 img[hidden] { display: none !important; }
 .banner:has(img[hidden]) { display: none; }
