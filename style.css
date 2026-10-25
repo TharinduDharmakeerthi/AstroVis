@@ -24,6 +24,8 @@
 
 * { box-sizing: border-box; }
 
+html { font-size: clamp(16px, 0.9rem + 0.25vw, 18px); }
+
 body {
   margin: 0;
   background: var(--bg);
@@ -111,6 +113,10 @@ main {
 img[hidden] { display: none !important; }
 .banner:has(img[hidden]) { display: none; }
 
+/* "Under construction" strip: scales down with the window, never wider than 640px */
+.construction { padding: 24px 32px 0; }
+.construction img { display: block; width: 640px; max-width: 100%; height: auto; margin: 0 auto; border-radius: 8px; }
+
 article { max-width: calc(70ch + 64px); margin: 0 auto; padding: 40px 32px 0; }
 h1 { margin: 0 0 20px; font-size: 2.1rem; line-height: 1.25; }
 h2 { margin: 36px 0 8px; font-size: 1.5rem; line-height: 1.3; }
@@ -133,6 +139,7 @@ article img { display: block; max-width: 100%; height: auto; margin: 24px auto; 
   }
   main { margin-left: 0; padding: 0 0 80px; }
   article { padding: 24px 20px 0; }
+  .construction { padding: 16px 20px 0; }
 }
 
 /* Collapsible topics: subtopics show only for the section you are in, or when opened with the arrow */

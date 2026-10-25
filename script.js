@@ -1,3 +1,7 @@
+// ---- Switches: set to false when the site is finished -------------------
+const SHOW_UNDER_CONSTRUCTION = true;  // "under construction" strip below the banner
+const SHOW_PLACEHOLDER_IMAGE = true;   // placeholder picture in sections that have no image yet
+
 // ---- Logo sizing -------------------------------------------------------
 // The AstroVis logo is shown at two-thirds of its size (its width is first kept between
 // LOGO_BASE_MIN and LOGO_BASE_MAX pixels). The sidebar is as wide as the logo, but never
@@ -29,6 +33,17 @@ function hideIfBroken(img) {
   if (img.complete && !img.naturalWidth) hide();
 }
 document.querySelectorAll('.logo img, .banner img').forEach(hideIfBroken);
+
+if (SHOW_UNDER_CONSTRUCTION) {
+  const strip = document.createElement('aside');
+  strip.className = 'construction';
+  const img = document.createElement('img');
+  img.src = 'images/under_construction.png';
+  img.alt = 'Under construction: this site is still growing';
+  img.addEventListener('error', () => strip.remove());
+  strip.append(img);
+  document.querySelector('.banner').after(strip);
+}
 
 // ---- Sections ----------------------------------------------------------
 const tree = document.getElementById('tree');
@@ -180,6 +195,14 @@ function renderParts(s, parts) {
     const p = document.createElement('p');
     p.textContent = 'No content yet. Add content/' + s.id + '_0.md for this section.';
     nodes.push(p);
+  }
+  if (SHOW_PLACEHOLDER_IMAGE && !parts.some(part => part.img)) {
+    const ph = document.createElement('img');
+    ph.src = 'images/placeholder.png';
+    ph.alt = 'Image coming soon';
+    ph.className = 'placeholder';
+    ph.addEventListener('error', () => ph.remove());
+    nodes.push(ph);
   }
   return nodes;
 }
