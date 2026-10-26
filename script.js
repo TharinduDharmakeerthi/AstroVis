@@ -84,16 +84,29 @@ async function loadTitle(id) {
   return s;
 }
 
-// Finds <id>_0.md, <id>_1.md ... and images/<id>_0.png, <id>_1.png ... until a number has neither
+// Checks that a file exists without downloading it (used for GIFs, which can be large)
+async function fileExists(url) {
+  try {
+    const res = await fetch(url, { method: 'HEAD' });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Finds <id>_0.md, <id>_1.md ..., images/<id>_0.png ... and gifs/<id>_0.gif ...
+// It stops at the first number that has none of the three.
 async function loadParts(id) {
   const parts = [];
   for (let i = 0; i < 200; i++) {
-    const [text, img] = await Promise.all([
+    const gifUrl = 'gifs/' + id + '_' + i + '.gif';
+    const [text, img, hasGif] = await Promise.all([
       fetchText('content/' + id + '_' + i + '.md'),
-      loadImage('images/' + id + '_' + i + '.png')
+      loadImage('images/' + id + '_' + i + '.png'),
+      fileExists(gifUrl)
     ]);
-    if (text === null && !img) break;
-    parts.push({ text, img });
+    if (text === null && !img && !hasGif) break;
+    parts.push({ text, img, gif: hasGif ? gifUrl : null });
   }
   return parts;
 }
@@ -186,6 +199,13 @@ function renderParts(s, parts) {
       img.alt = s.title + ' (figure ' + (i + 1) + ')';
       nodes.push(img);
     }
+    if (part.gif) {
+      const gif = document.createElement('img');
+      gif.src = part.gif;
+      gif.alt = s.title + ' (animation ' + (i + 1) + ')';
+      gif.addEventListener('error', () => gif.remove());
+      nodes.push(gif);
+    }
     if (part.text !== null) {
       const text = (i === 0 ? part.text.replace(TITLE_RE, '') : part.text).trim();
       if (text) nodes.push(renderBody(text));
@@ -196,7 +216,7 @@ function renderParts(s, parts) {
     p.textContent = 'No content yet. Add content/' + s.id + '_0.md for this section.';
     nodes.push(p);
   }
-  if (SHOW_PLACEHOLDER_IMAGE && !parts.some(part => part.img)) {
+  if (SHOW_PLACEHOLDER_IMAGE && !parts.some(part => part.img || part.gif)) {
     const ph = document.createElement('img');
     ph.src = 'images/placeholder.png';
     ph.alt = 'Image coming soon';
